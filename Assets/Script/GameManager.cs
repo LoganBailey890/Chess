@@ -1,8 +1,10 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour {
-	
+
+	public GameObject ui;
 	public GameObject CubeDark;
 	public GameObject CubeLight;
 	public GameObject[] PiecesGO = new GameObject[6];
@@ -31,14 +33,35 @@ public class GameManager : MonoBehaviour {
 		GUI.Label (new Rect(10,10,200,20), ("Active Player = " + _activePlayerColor));	
 		GUI.Label (new Rect(10,30,200,20), ("Game State = " + gameState));
 	}
-	
+
+    public enum GameMode
+    {
+		BASE,
+		NEWMODE
+    }
+
 	// Initialize the board area
-	void Start()
+/*	void Start()
 	{
+      
+	}*/
+
+	public void SartGame()
+    {
+		Debug.Log("work");
 		CreateBoard();
 		AddPieces();
+		ui.SetActive(false);
 	}
-	
+
+	public void StartGame960()
+	{
+		Debug.Log("work");
+		CreateBoard();
+		Chess960AddPieces();
+		ui.SetActive(false);
+	}
+
 	// Create the board by placing cubes
 	void CreateBoard()
 	{
@@ -63,6 +86,8 @@ public class GameManager : MonoBehaviour {
 	// Add all pieces are their respective position
 	void AddPieces()
 	{
+
+
 		int _linePosY;
 		int _piecePlayer;
 		
@@ -97,6 +122,112 @@ public class GameManager : MonoBehaviour {
 		CreatePiece("Knight", 6, _linePosY, _piecePlayer);
 		CreatePiece("Rook"  , 7, _linePosY, _piecePlayer);
 	}
+
+	void Chess960AddPieces()
+    {
+
+		ArrayList placment = DetermainPlace();
+
+		int _linePosY;
+		int _piecePlayer;
+
+		for (int i = 0; i < _boardSize; i++)
+		{
+			CreatePiece("Pawn", i, 1, 1); // Create all white pawn 	
+			CreatePiece("Pawn", i, 6, -1); // Create all dark pawn
+		}
+
+
+		// Create white pieces
+		_linePosY = 0;
+		_piecePlayer = 1;
+		CreatePiece("Rook", (int)placment[0], _linePosY, _piecePlayer);
+		CreatePiece("Rook", (int)placment[1], _linePosY, _piecePlayer);
+		CreatePiece("King", (int)placment[2], _linePosY, _piecePlayer);
+		CreatePiece("Bishop", (int)placment[3], _linePosY, _piecePlayer);
+		CreatePiece("Bishop", (int)placment[4], _linePosY, _piecePlayer);
+		CreatePiece("Knight", (int)placment[5], _linePosY, _piecePlayer);
+		CreatePiece("Queen", (int)placment[6], _linePosY, _piecePlayer);
+		CreatePiece("Knight", (int)placment[7], _linePosY, _piecePlayer);
+
+		// Create Dark pieces
+		_linePosY = 7;
+		_piecePlayer = -1;
+		CreatePiece("Rook", (int)placment[0], _linePosY, _piecePlayer);
+		CreatePiece("Rook", (int)placment[1], _linePosY, _piecePlayer);
+		CreatePiece("King", (int)placment[2], _linePosY, _piecePlayer);
+		CreatePiece("Bishop", (int)placment[3], _linePosY, _piecePlayer);
+		CreatePiece("Bishop", (int)placment[4], _linePosY, _piecePlayer);
+		CreatePiece("Knight", (int)placment[5], _linePosY, _piecePlayer);
+		CreatePiece("Queen", (int)placment[6], _linePosY, _piecePlayer);
+		CreatePiece("Knight", (int)placment[7], _linePosY, _piecePlayer);
+
+	}
+
+	ArrayList DetermainPlace()
+    {
+		ArrayList temp = new();
+		ArrayList exclude = new() { 0,2,4,6};
+
+		int tempnum;
+
+		temp.Add(Inrand(1, 8));
+
+		do
+		{
+			tempnum = Inrand(0, 8);
+		} while (tempnum == (int)temp[0] || tempnum == (int) temp[0]+1 || tempnum == (int)temp[0]-1);
+		temp.Add(tempnum);
+
+        do
+        {
+            tempnum = Inrand((int)temp[0], (int)temp[1]);
+        } while (temp.Contains(tempnum));
+        temp.Add(tempnum);
+
+        do
+        {
+            tempnum = Inrand(0, 8);
+        } while(temp.Contains(tempnum) || exclude.Contains(tempnum));
+		temp.Add(tempnum);
+
+        do
+        {
+			tempnum = Inrand(0, 8);
+        }while(temp.Contains(tempnum) || !exclude.Contains(tempnum));
+		temp.Add(tempnum);
+
+		while (temp.Count != 8)
+        {
+			tempnum = Inrand(0, 8);
+			if(temp.Contains(tempnum))
+            {
+
+            }
+			else
+            {
+				temp.Add(tempnum);
+            }
+        }
+
+
+        return temp;
+    }
+
+	int Inrand(int min, int max)
+    {
+		int number = Random.Range(min, max);
+		return number;
+    }
+
+	public void test()
+    {
+		ArrayList testing = DetermainPlace();
+        foreach (var var in testing)
+        {
+            Debug.Log(var);
+        }
+    }
 	
 	// Spawn a piece on the board
 	void CreatePiece(string _pieceName, int _posX, int _posY, int _playerTag)
@@ -134,12 +265,12 @@ public class GameManager : MonoBehaviour {
 		if(_playerTag == 1)
 		{
 			_PieceToCreate.tag = "1";
-			_PieceToCreate.renderer.material = LightMat;
+			_PieceToCreate.GetComponent<Renderer>().material = LightMat;
 		}
 		else if(_playerTag == -1)
 		{
 			_PieceToCreate.tag = "-1";
-			_PieceToCreate.renderer.material = DarkMat;		
+			_PieceToCreate.GetComponent<Renderer>().material = DarkMat;		
 		}
 		
 		_boardPieces[_posX,_posY] = _pieceIndex*_playerTag; 
@@ -151,7 +282,7 @@ public class GameManager : MonoBehaviour {
 		// Unselect the piece if it was already selected
 		if(_PieceToSelect  == SelectedPiece)
 		{
-			SelectedPiece.renderer.material.color = Color.white;
+			SelectedPiece.GetComponent<Renderer>().material.color = Color.white;
 			SelectedPiece = null;
 			ChangeState (0);
 		}
@@ -160,10 +291,10 @@ public class GameManager : MonoBehaviour {
 			// Change color of the selected piece to make it apparent. Put it back to white when the piece is unselected
 			if(SelectedPiece)
 			{
-				SelectedPiece.renderer.material.color = Color.white;
+				SelectedPiece.GetComponent<Renderer>().material.color = Color.white;
 			}
 			SelectedPiece = _PieceToSelect;
-			SelectedPiece.renderer.material.color = Color.blue;
+			SelectedPiece.GetComponent<Renderer>().material.color = Color.blue;
 			ChangeState (1);
 		}
 	}
@@ -186,7 +317,7 @@ public class GameManager : MonoBehaviour {
 			_boardPieces[(int)_coordPiece.x , (int)_coordPiece.y ] = 0;
 			
 			SelectedPiece.transform.position = new Vector3(_coordToMove.x, _pieceHeight, _coordToMove.y);		// Move the piece
-			SelectedPiece.renderer.material.color = Color.white;	// Change it's color back
+			SelectedPiece.GetComponent<Renderer>().material.color = Color.white;	// Change it's color back
 			SelectedPiece = null;									// Unselect the Piece
 			ChangeState (0);
 			activePlayer = -activePlayer;
@@ -333,4 +464,6 @@ public class GameManager : MonoBehaviour {
 	{
 		gameState = _newState;
 	}
+
+	
 }
