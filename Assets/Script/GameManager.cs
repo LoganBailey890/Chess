@@ -48,7 +48,6 @@ public class GameManager : MonoBehaviour {
 
 	public void SartGame()
     {
-		Debug.Log("work");
 		CreateBoard();
 		AddPieces();
 		ui.SetActive(false);
@@ -56,7 +55,6 @@ public class GameManager : MonoBehaviour {
 
 	public void StartGame960()
 	{
-		Debug.Log("work");
 		CreateBoard();
 		Chess960AddPieces();
 		ui.SetActive(false);
